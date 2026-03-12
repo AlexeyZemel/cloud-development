@@ -125,4 +125,3 @@
 
 Чтобы задать вопрос по лабораторной, воспользуйтесь [соответствующим разделом дискуссий](https://github.com/itsecd/cloud-development/discussions/categories/questions) или заведите [ишью](https://github.com/itsecd/cloud-development/issues/new).  
 Если у вас появились идеи/пожелания/прочие полезные мысли по преподаваемой дисциплине, их можно оставить [здесь](https://github.com/itsecd/cloud-development/discussions/categories/ideas).
-
