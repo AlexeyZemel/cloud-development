@@ -1,4 +1,4 @@
-using Microsoft.AspNetCore.Http;
+п»їusing Microsoft.AspNetCore.Http;
 using Ocelot.Configuration;
 using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Responses;
@@ -8,7 +8,7 @@ using Ocelot.Values;
 namespace ProjectApp.Gateway.LoadBalancing;
 
 /// <summary>
-/// Балансировщик нагрузки с алгоритмом взвешенного случайного выбора (Weighted Random)
+/// Р‘Р°Р»Р°РЅСЃРёСЂРѕРІС‰РёРє РЅР°РіСЂСѓР·РєРё СЃ Р°Р»РіРѕСЂРёС‚РјРѕРј РІР·РІРµС€РµРЅРЅРѕРіРѕ СЃР»СѓС‡Р°Р№РЅРѕРіРѕ РІС‹Р±РѕСЂР° (Weighted Random)
 /// </summary>
 public sealed class WeightedRandomLoadBalancerCreator(IConfiguration configuration) : ILoadBalancerCreator
 {
@@ -22,7 +22,7 @@ public sealed class WeightedRandomLoadBalancerCreator(IConfiguration configurati
     }
 
     /// <summary>
-    /// Реализация балансировщика нагрузки с взвешенным случайным распределением запросов
+    /// Р РµР°Р»РёР·Р°С†РёСЏ Р±Р°Р»Р°РЅСЃРёСЂРѕРІС‰РёРєР° РЅР°РіСЂСѓР·РєРё СЃ РІР·РІРµС€РµРЅРЅС‹Рј СЃР»СѓС‡Р°Р№РЅС‹Рј СЂР°СЃРїСЂРµРґРµР»РµРЅРёРµРј Р·Р°РїСЂРѕСЃРѕРІ
     /// </summary>
     private sealed class WeightedRandomLoadBalancer(IReadOnlyList<DownstreamHostAndPort> downstreamAddresses, IReadOnlyList<double> configuredWeights) : ILoadBalancer
     {
@@ -36,7 +36,7 @@ public sealed class WeightedRandomLoadBalancerCreator(IConfiguration configurati
         public string Type => "WeightedRandom";
 
         /// <summary>
-        /// Выбирает реплику для обработки запроса на основе взвешенного случайного алгоритма
+        /// Р’С‹Р±РёСЂР°РµС‚ СЂРµРїР»РёРєСѓ РґР»СЏ РѕР±СЂР°Р±РѕС‚РєРё Р·Р°РїСЂРѕСЃР° РЅР° РѕСЃРЅРѕРІРµ РІР·РІРµС€РµРЅРЅРѕРіРѕ СЃР»СѓС‡Р°Р№РЅРѕРіРѕ Р°Р»РіРѕСЂРёС‚РјР°
         /// </summary>
         public Task<Response<ServiceHostAndPort>> LeaseAsync(HttpContext httpContext)
         {
@@ -54,7 +54,7 @@ public sealed class WeightedRandomLoadBalancerCreator(IConfiguration configurati
         }
 
         /// <summary>
-        /// Выбирает индекс реплики на основе нормализованных весов методом рулетки
+        /// Р’С‹Р±РёСЂР°РµС‚ РёРЅРґРµРєСЃ СЂРµРїР»РёРєРё РЅР° РѕСЃРЅРѕРІРµ РЅРѕСЂРјР°Р»РёР·РѕРІР°РЅРЅС‹С… РІРµСЃРѕРІ РјРµС‚РѕРґРѕРј СЂСѓР»РµС‚РєРё
         /// </summary>
         private int SelectIndexByWeight(IReadOnlyList<double> weights)
         {
@@ -74,7 +74,7 @@ public sealed class WeightedRandomLoadBalancerCreator(IConfiguration configurati
         }
 
         /// <summary>
-        /// Нормализует конфигурационные веса: приводит их к сумме 1, проверяет корректность
+        /// РќРѕСЂРјР°Р»РёР·СѓРµС‚ РєРѕРЅС„РёРіСѓСЂР°С†РёРѕРЅРЅС‹Рµ РІРµСЃР°: РїСЂРёРІРѕРґРёС‚ РёС… Рє СЃСѓРјРјРµ 1, РїСЂРѕРІРµСЂСЏРµС‚ РєРѕСЂСЂРµРєС‚РЅРѕСЃС‚СЊ
         /// </summary>
         private static IReadOnlyList<double> NormalizeWeights(IReadOnlyList<double> configuredWeights, int replicasCount)
         {
