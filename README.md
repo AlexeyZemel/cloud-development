@@ -10,12 +10,16 @@
 - Генерирует тестовые данные о программных проектах с помощью Bogus.
 - Возвращает данные проекта по `id` через HTTP API.
 - Кеширует результаты в Redis для повторных запросов.
-- Предоставляет Swagger для просмотра и проверки API в режиме разработки.
-- Публикует health-check эндпоинты и телеметрию на базе OpenTelemetry через Aspire service defaults.
+- Использует API Gateway (Ocelot) для маршрутизации запросов.
+- Балансирует нагрузку между несколькими экземплярами API с помощью алгоритма **Weighted Random**.
+- Поднимает всю инфраструктуру через .NET Aspire (оркестрация сервисов).
+- Предоставляет Swagger для тестирования API.
+- Публикует health-check и телеметрию через OpenTelemetry.
 
 ## Структура решения
 
 - `ProjectApp.Api` - ASP.NET Core Web API с логикой генерации, Redis-кешем, Swagger, CORS и контроллерами.
+- `ProjectApp.Gateway` - API Gateway на базе **Ocelot**, Балансировка нагрузки (Weighted Random)
 - `ProjectApp.AppHost` - проект оркестрации на .NET Aspire, который поднимает API, Redis, Redis Commander и клиент.
 - `ProjectApp.Domain` - доменные сущности, используемые в решении.
 - `ProjectApp.ServiceDefaults` - общая конфигурация Aspire: телеметрия, service discovery, resilience и health checks.
@@ -28,6 +32,7 @@
 - .NET Aspire
 - Redis
 - Bogus
+- Ocelot (API Gateway)
 - Swagger / OpenAPI
 - OpenTelemetry
 - Blazor WebAssembly
@@ -94,3 +99,15 @@ curl "http://localhost:5179/api/project?id=1"
 
 - API использует распределенный кеш через `IDistributedCache` с хранилищем в Redis.
 - Ошибки кеша не ломают обработку запроса: API логирует проблему и продолжает генерацию данных.
+- Используется 5 реплик API
+
+## Балансировка нагрузки
+
+Реализован алгоритм: Weighted Random
+
+- Каждой реплике задаётся вес:
+```json
+"Weights": [0.4, 0.25, 0.15, 0.1, 0.1]
+```
+
+Запрос распределяется случайно, но с учётом весов

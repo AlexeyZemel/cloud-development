@@ -4,7 +4,6 @@ using ProjectApp.Api.Options;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
-var allowedOrigins = builder.Configuration.GetSection("AllowedOrigins").Get<string[]>();
 
 
 builder.AddServiceDefaults();
@@ -13,16 +12,6 @@ builder.AddRedisDistributedCache("cache");
 
 builder.Services.Configure<CacheSettings>(builder.Configuration.GetSection("CacheSettings"));
 builder.Services.AddSingleton(new JsonSerializerOptions(JsonSerializerDefaults.Web));
-
-builder.Services.AddCors(options =>
-{
-    options.AddDefaultPolicy(policy =>
-    {
-        policy.WithOrigins(allowedOrigins)
-              .WithMethods("GET")
-              .WithHeaders("Content-Type");
-    });
-});
 
 builder.Services.AddScoped<ProgramProjectGeneratorService>();
 
@@ -58,7 +47,6 @@ if (app.Environment.IsDevelopment())
 }
 
 app.UseHttpsRedirection();
-app.UseCors();
 app.MapControllers();
 app.MapDefaultEndpoints();
 

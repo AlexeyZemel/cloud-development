@@ -2,8 +2,11 @@ using Ocelot.DependencyInjection;
 using Ocelot.LoadBalancer.Interfaces;
 using Ocelot.Middleware;
 using ProjectApp.Gateway.LoadBalancing;
+using ProjectApp.ServiceDefaults;
 
 var builder = WebApplication.CreateBuilder(args);
+
+builder.AddServiceDefaults();
 
 builder.Configuration
     .AddJsonFile("ocelot.json", optional: false, reloadOnChange: true)
@@ -26,13 +29,17 @@ if (replicas.Count > 0)
     builder.Configuration.AddInMemoryCollection(overrides);
 }
 
+var allowedOrigins = builder.Configuration
+    .GetSection("AllowedOrigins")
+    .Get<string[]>() ?? [];
+
 builder.Services.AddCors(options =>
 {
     options.AddDefaultPolicy(policy =>
     {
-        policy.AllowAnyOrigin()
-            .AllowAnyHeader()
-            .AllowAnyMethod();
+        policy.WithOrigins(allowedOrigins)
+              .WithMethods("GET")
+              .WithHeaders("Content-Type");
     });
 });
 
@@ -48,7 +55,8 @@ app.Run();
 
 static List<(string Scheme, string Host, int Port)> GetReplicas(IConfiguration configuration)
 {
-    var addresses = configuration.GetSection("Services:projectapp-api:https").Get<string[]>()
+    var addresses = configuration.GetSection("ApiReplicas").Get<string[]>()
+                    ?? configuration.GetSection("Services:projectapp-api:https").Get<string[]>()
                     ?? configuration.GetSection("Services:projectapp-api:http").Get<string[]>()
                     ?? [];
 
