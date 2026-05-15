@@ -1,10 +1,12 @@
+using Amazon.SQS;
+using LocalStack.Client.Extensions;
+using ProjectApp.Api.Messaging;
+using ProjectApp.Api.Options;
 using ProjectApp.Api.Services;
 using ProjectApp.ServiceDefaults;
-using ProjectApp.Api.Options;
 using System.Text.Json;
 
 var builder = WebApplication.CreateBuilder(args);
-
 
 builder.AddServiceDefaults();
 
@@ -12,6 +14,10 @@ builder.AddRedisDistributedCache("cache");
 
 builder.Services.Configure<CacheSettings>(builder.Configuration.GetSection("CacheSettings"));
 builder.Services.AddSingleton(new JsonSerializerOptions(JsonSerializerDefaults.Web));
+
+builder.Services.AddLocalStack(builder.Configuration);
+builder.Services.AddAwsService<IAmazonSQS>();
+builder.Services.AddScoped<IProducerService, SqsProducerService>();
 
 builder.Services.AddScoped<ProgramProjectGeneratorService>();
 

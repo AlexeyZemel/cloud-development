@@ -1,0 +1,32 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Description: 'CloudFormation template for ProjectApp (SQS + Minio variant)'
+
+Parameters:
+  QueueName:
+    Type: String
+    Description: Name for the SQS queue
+    Default: 'projectapp-queue'
+
+Resources:
+  ProjectAppQueue:
+    Type: AWS::SQS::Queue
+    Properties:
+      QueueName: !Ref QueueName
+      VisibilityTimeout: 30
+      MessageRetentionPeriod: 345600
+      DelaySeconds: 0
+      ReceiveMessageWaitTimeSeconds: 0
+      Tags:
+        - Key: Name
+          Value: !Ref QueueName
+        - Key: Environment
+          Value: ProjectApp
+
+Outputs:
+  SQSQueueName:
+    Description: Name of the SQS queue
+    Value: !GetAtt ProjectAppQueue.QueueName
+
+  SQSQueueArn:
+    Description: ARN of the SQS queue
+    Value: !GetAtt ProjectAppQueue.Arn

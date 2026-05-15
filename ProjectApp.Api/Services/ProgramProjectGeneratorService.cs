@@ -1,20 +1,28 @@
-﻿using ProjectApp.Domain.Entities;
+using ProjectApp.Domain.Entities;
 using Microsoft.Extensions.Caching.Distributed;
 using System.Text.Json;
 using Microsoft.Extensions.Options;
 using ProjectApp.Api.Options;
+using ProjectApp.Api.Messaging;
 using System.Diagnostics.Metrics;
 using System.Diagnostics;
 
 namespace ProjectApp.Api.Services;
 
 /// <summary>
-/// Сервис получения программного проекта с использованием кэша и генерации при отсутствии данны
+/// Сервис получения программного проекта с использованием кэша, генерации при отсутствии данных
+/// и отправки сгенерированного проекта в очередь сообщений
 /// </summary>
+/// <param name="cache">Распределённый кэш</param>
+/// <param name="cacheSettings">Настройки кэша</param>
+/// <param name="jsonSerializerOptions">Опции сериализации JSON</param>
+/// <param name="producer">Служба отправки сообщений в брокер</param>
+/// <param name="logger">Логгер</param>
 public class ProgramProjectGeneratorService(
     IDistributedCache cache,
     IOptions<CacheSettings> cacheSettings,
     JsonSerializerOptions jsonSerializerOptions,
+    IProducerService producer,
     ILogger<ProgramProjectGeneratorService> logger)
 {
     private static readonly Meter _meter = new("ProjectApp.Api");
@@ -23,7 +31,8 @@ public class ProgramProjectGeneratorService(
     private readonly int _expirationMinutes = cacheSettings.Value.ExpirationMinutes;
 
     /// <summary>
-    /// Возвращает проект по идентификатору из кэша или генерирует новый и сохраняет его в кэш
+    /// Возвращает проект по идентификатору из кэша или генерирует новый, сохраняет его в кэш
+    /// и отправляет сообщение в очередь
     /// </summary>
     /// <param name="id">Идентификатор проекта</param>
     /// <param name="cancellationToken">Токен отмены</param>
@@ -40,12 +49,12 @@ public class ProgramProjectGeneratorService(
 
             if (!string.IsNullOrEmpty(cachedData))
             {
-                var cashedProject = JsonSerializer.Deserialize<ProgramProject>(cachedData, jsonSerializerOptions);
+                var cachedProject = JsonSerializer.Deserialize<ProgramProject>(cachedData, jsonSerializerOptions);
 
-                if (cashedProject != null)
+                if (cachedProject != null)
                 {
                     logger.LogInformation("Software project {Id} found in cache", id);
-                    return cashedProject;
+                    return cachedProject;
                 }
 
                 logger.LogWarning("Project {Id} was found in cache but could not be deserialized. Generating a new one", id);
@@ -92,6 +101,8 @@ public class ProgramProjectGeneratorService(
             _cacheErrorCounter.Add(1, new KeyValuePair<string, object?>("operation", "set"));
             logger.LogWarning(ex, "Failed to save project {Id} to cache (error ignored)", id);
         }
+
+        await producer.SendMessage(project, cancellationToken);
 
         return project;
     }
